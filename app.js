@@ -85,20 +85,40 @@ function saveHiddenMonths(list){
 }
 
 /* ---------------- boot / merge data sources ---------------- */
+// Auto-discovers monthly Excel files sitting directly in the repo's /data folder
+// (e.g. "PPP_Crime Against Women_July2026.xlsx") via the public GitHub API, and
+// parses each one client-side. No manual JSON export/import step needed —
+// publishing a new month is just: upload the .xlsx into /data on GitHub.
+function repoOwnerAndName(){
+  // Works for a GitHub Pages *user* site, where the repo name equals the hostname
+  // (e.g. chittoorpppsurvey.github.io -> owner "chittoorpppsurvey", repo "chittoorpppsurvey.github.io").
+  const host = location.hostname;
+  if(!host.endsWith('.github.io')) return null;
+  const owner = host.split('.')[0];
+  return { owner, repo: host };
+}
+
 async function fetchManifestMonths(){
   const out = [];
+  const info = repoOwnerAndName();
+  if(!info) return out; // e.g. opened via file:// or a non-github.io host
   try{
-    const res = await fetch('data/manifest.json', {cache:'no-store'});
-    if(!res.ok) return out;
-    const manifest = await res.json();
-    const list = manifest.months || [];
-    for(const m of list){
+    const apiUrl = `https://api.github.com/repos/${info.owner}/${info.repo}/contents/data`;
+    const res = await fetch(apiUrl, {cache:'no-store'});
+    if(!res.ok) return out; // data folder doesn't exist yet, or rate-limited
+    const listing = await res.json();
+    if(!Array.isArray(listing)) return out;
+    const excelFiles = listing.filter(f=> f.type==='file' && /\.(xlsx|xls)$/i.test(f.name));
+    for(const f of excelFiles){
       try{
-        const r2 = await fetch(`data/months/${m}.json`, {cache:'no-store'});
-        if(r2.ok){ const obj = await r2.json(); obj.__source='github'; out.push(obj); }
-      }catch(e){}
+        const fileRes = await fetch(f.download_url, {cache:'no-store'});
+        if(!fileRes.ok) continue;
+        const buf = await fileRes.arrayBuffer();
+        const monthObj = parseExcelBufferToMonth(buf, f.name);
+        if(monthObj){ monthObj.__source = 'github'; out.push(monthObj); }
+      }catch(e){ console.error('Could not read', f.name, e); }
     }
-  }catch(e){ /* likely opened via file:// or manifest not published yet */ }
+  }catch(e){ /* network/CORS issue — dashboard will just show 0 GitHub months */ }
   return out;
 }
 
@@ -222,6 +242,7 @@ function readFileAsArrayBuffer(file){
 function guessMonthFromFilename(name){
   const s = name.toLowerCase();
   const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  const monthAbbr = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
   const now = new Date();
   // yyyy-mm
   let m = s.match(/(20\d{2})[-_.](0?[1-9]|1[0-2])\b/);
@@ -229,9 +250,18 @@ function guessMonthFromFilename(name){
   // dd.mm.yyyy or dd-mm-yyyy
   m = s.match(/\b(0?[1-9]|[12]\d|3[01])[.\-_](0?[1-9]|1[0-2])[.\-_](20\d{2})\b/);
   if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}`;
-  // month name + year
+  // full month name + year, e.g. "July2026" / "July_2026"
   for(let i=0;i<12;i++){
     if(s.includes(months[i])){
+      const y = s.match(/20\d{2}/);
+      const year = y ? y[0] : String(now.getFullYear());
+      return `${year}-${String(i+1).padStart(2,'0')}`;
+    }
+  }
+  // 3-letter abbreviation + year, e.g. "Aug2026" / "Aug_2026" (word-boundary match to avoid false hits)
+  for(let i=0;i<12;i++){
+    const re = new RegExp('\\b'+monthAbbr[i]+'\\b|'+monthAbbr[i]+'(?=[_\\-.]?20\\d{2})');
+    if(re.test(s)){
       const y = s.match(/20\d{2}/);
       const year = y ? y[0] : String(now.getFullYear());
       return `${year}-${String(i+1).padStart(2,'0')}`;
@@ -247,34 +277,43 @@ function monthLabel(key){
   return `${names[parseInt(m,10)-1]} ${y}`;
 }
 
+// Shared parser: turns a raw .xlsx ArrayBuffer + its filename into a month object.
+// Used both by the admin drag-and-drop uploader and by the auto-fetch from GitHub.
+function parseExcelBufferToMonth(buf, filename, monthKeyOverride){
+  const wb = XLSX.read(buf, {type:'array'});
+  const sheetName = wb.SheetNames.find(n=>/location/i.test(n)) || wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+  const parsed = parseWorkbookAOA(aoa);
+  const monthKey = monthKeyOverride || guessMonthFromFilename(filename);
+  if(!monthKey) return null;
+  const shortLabels = parsed.questions.map((q,i)=> STATE.months[0]?.questionsShort?.[i] || `Question ${i+1}`);
+  return {
+    month: monthKey,
+    reportLabel: monthLabel(monthKey),
+    reportAsOn: '',
+    sourceFile: filename,
+    surveyTitle: 'PS WISE PUBLIC FEEDBACK ON CRIME AGAINST WOMEN',
+    questions: parsed.questions,
+    questionsShort: shortLabels,
+    rows: parsed.rows,
+  };
+}
+
 async function handleFiles(fileList){
   const files = Array.from(fileList).filter(f=>/\.(xlsx|xls|csv)$/i.test(f.name));
   if(files.length===0){ toast('Please choose an Excel (.xlsx) file.'); return; }
   for(const file of files){
     try{
       const buf = await readFileAsArrayBuffer(file);
-      const wb = XLSX.read(buf, {type:'array'});
-      const sheetName = wb.SheetNames.find(n=>/location/i.test(n)) || wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
-      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
-      const parsed = parseWorkbookAOA(aoa);
       const guess = guessMonthFromFilename(file.name);
       const monthKey = await askMonth(guess, file.name);
       if(!monthKey) continue;
-      const shortLabels = parsed.questions.map((q,i)=> STATE.months[0]?.questionsShort?.[i] || `Question ${i+1}`);
-      const monthObj = {
-        month: monthKey,
-        reportLabel: monthLabel(monthKey),
-        reportAsOn: '',
-        sourceFile: file.name,
-        surveyTitle: 'PS WISE PUBLIC FEEDBACK ON CRIME AGAINST WOMEN',
-        questions: parsed.questions,
-        questionsShort: shortLabels,
-        rows: parsed.rows,
-        __source: 'local',
-      };
+      const monthObj = parseExcelBufferToMonth(buf, file.name, monthKey);
+      if(!monthObj) continue;
+      monthObj.__source = 'local';
       upsertMonth(monthObj);
-      toast(`Loaded ${monthObj.reportLabel}: ${parsed.rows.length} police stations, ${parsed.questions.length} questions.`);
+      toast(`Loaded ${monthObj.reportLabel}: ${monthObj.rows.length} police stations, ${monthObj.questions.length} questions.`);
     }catch(err){
       console.error(err);
       toast('Could not read "'+file.name+'": '+err.message);
@@ -308,14 +347,14 @@ function deleteMonth(key){
 }
 
 function hideGithubMonth(key){
-  if(!confirm('Remove '+monthLabel(key)+' from this dashboard?\n\nThis only hides it in this browser. To delete it from the published site for everyone, also remove data/months/'+key+'.json and its entry in data/manifest.json from your GitHub repo, then commit & push.')) return;
+  if(!confirm('Remove '+monthLabel(key)+' from this dashboard?\n\nThis only hides it in this browser. To delete it from the published site for everyone, also delete that month\'s .xlsx file from the data/ folder in your GitHub repo, then commit & push.')) return;
   const hidden = loadHiddenMonths();
   if(!hidden.includes(key)) hidden.push(key);
   saveHiddenMonths(hidden);
   STATE.months = STATE.months.filter(m=>m.month!==key);
   paintChrome();
   renderAll();
-  toast('Hidden '+monthLabel(key)+' in this browser. Delete data/months/'+key+'.json + its manifest.json entry in your repo to remove it everywhere.');
+  toast('Hidden '+monthLabel(key)+' in this browser. Delete that month\'s .xlsx from the data/ folder in your repo to remove it everywhere.');
 }
 
 function unhideGithubMonth(key){
@@ -915,18 +954,15 @@ function renderData(){
       <div class="ch"><h3>Publish to GitHub (recommended)</h3></div>
       <div class="cb">
         <p style="color:var(--muted);font-size:13.5px;line-height:1.6">
-        Local uploads only live in this browser. To make a month's data show up for everyone who visits your GitHub Pages site
-        (and to keep it safe if you clear your browser), export it and commit it to your repository:
+        Local uploads only live in this browser. To make a month's data show up for everyone who visits your GitHub Pages site,
+        just add the original Excel file to your repository — no export step needed:
         </p>
         <ol style="margin:12px 0 0 20px;color:var(--muted);font-size:13.5px;line-height:1.9">
-          <li>Click <b>Export JSON</b> next to a month above — this downloads e.g. <code>2026-07.json</code>.</li>
-          <li>Add the file to <code>data/months/</code> in your GitHub repository.</li>
-          <li>Add the month key (e.g. <code>"2026-07"</code>) to the <code>months</code> array in <code>data/manifest.json</code>.</li>
-          <li>Commit &amp; push. GitHub Pages will serve it automatically — the dashboard fetches <code>data/manifest.json</code> on every visit.</li>
+          <li>In your GitHub repo, open the <code>data</code> folder and click <b>Add file → Upload files</b>.</li>
+          <li>Upload the month's <code>.xlsx</code> report as-is (e.g. <code>PPP_Crime Against Women_August2026.xlsx</code>) — keep the month name and year somewhere in the filename.</li>
+          <li>Commit. GitHub Pages updates within a minute or two — the dashboard lists the <code>data</code> folder and reads every Excel file it finds automatically.</li>
         </ol>
-        <div class="btnrow" style="margin-top:14px">
-          <button class="btn" id="downloadManifest">⬇ Export manifest.json (all loaded months)</button>
-        </div>
+        <div class="small" style="margin-top:10px">Tip: "Export JSON" below is only a backup/debugging option — you don't need it for normal monthly publishing.</div>
       </div>
     </div>
   `;
@@ -938,11 +974,6 @@ function renderData(){
   ['dragover','dragenter'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
   ['dragleave','drop'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.remove('drag'); }));
   dz.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
-
-  document.getElementById('downloadManifest').onclick = ()=>{
-    const manifest = { months: monthsDesc().map(m=>m.month).sort() };
-    downloadJson(manifest, 'manifest.json');
-  };
 }
 
 function downloadMonthJson(key){

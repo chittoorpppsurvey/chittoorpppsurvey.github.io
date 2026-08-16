@@ -11,24 +11,24 @@ and a heatmap — all computed in the browser, no backend required.
 ```
 index.html            the dashboard (open this)
 app.js                 all the logic: parsing, scoring, charts, tabs
-data/manifest.json     list of months published on GitHub Pages
-data/months/2026-07.json   one month's data (sample: your July report)
+data/                  put each month's raw .xlsx report straight in here
 ```
 
 ## 1. Host it on GitHub Pages
 
-1. Create a new GitHub repository (e.g. `caw-dashboard`).
-2. Upload `index.html`, `app.js`, and the whole `data/` folder to the repo root.
+1. Create a new GitHub repository (e.g. `caw-dashboard`, or `<username>.github.io`
+   for a root-domain site).
+2. Upload `index.html`, `app.js`, and the `data` folder to the repo root.
 3. In the repo, go to **Settings → Pages**, set **Source** to your default
    branch (`main`) and folder `/ (root)`, then save.
-4. GitHub will publish it at `https://<your-username>.github.io/caw-dashboard/`.
+4. GitHub will publish it at your Pages URL.
 
 That's it — the page is fully static (HTML/CSS/JS), so no server setup is needed.
 
 ## 2. Admin access (Data & Upload tab)
 
 The **Data & Upload** tab is hidden from ordinary visitors. Only someone who
-enters the admin password can see it and use the upload/export tools —
+enters the admin password can see it and use the local-preview upload tool —
 everyone else just sees the read-only dashboard tabs (Overview, PS Rankings,
 Heatmap, PS Detail, Methodology).
 
@@ -51,42 +51,35 @@ Heatmap, PS Detail, Methodology).
 only *hides the button* from casual visitors — it cannot stop someone
 determined from reading the password hash in `app.js` and trying to crack
 it offline, or from editing the page's own code in their browser to reveal
-the tab. It's meant to keep the upload tools out of the way of the public,
-not to be bulletproof security. Note also that a visitor uploading a file
-through their *own* browser only affects what *they* see locally — it can
-never change what's published to everyone else. Only pushing files to the
-GitHub repo (Section 3) does that, and that already requires real GitHub
-repo access.
+the tab.
 
 ## 3. Your monthly workflow
 
 Every month, once you have the new "District / Mandal / Location Wise
 Analysis Report" Excel file:
 
-1. Open the live dashboard → **Data & Upload** tab.
-2. Drag the `.xlsx` file into the upload box (or click to choose it).
-3. Confirm the reporting month in the popup that appears.
-4. The dashboard immediately shows that month's numbers, and folds it into
-   the Quarter/Year rollups — this happens instantly in your browser.
+1. In your GitHub repo, open the `data` folder → **Add file → Upload files**.
+2. Upload the `.xlsx` file as-is — no renaming or conversion needed. Just
+   make sure the month name (or a 3-letter abbreviation) and the year both
+   appear somewhere in the filename, e.g.:
+   - `PPP_Crime Against Women_July2026.xlsx`
+   - `PPP_Crime Against Women_Aug2026.xlsx`
+3. Commit. GitHub Pages rebuilds within a minute or two.
 
-This local upload is enough for **your own** browsing session, but it only
-lives in that browser. To make the new month visible to everyone who visits
-your GitHub Pages link (and to keep the history safe long-term), publish it:
+That's the whole workflow — **no export step, no manifest file to edit.**
+On every page load, the dashboard asks the GitHub API what's inside the
+`data` folder, downloads every `.xlsx`/`.xls` file it finds, and parses each
+one in the visitor's browser. Anyone who opens the site sees every month
+that's currently sitting in `data/` — no re-uploading needed on their end.
 
-5. Still on the **Data & Upload** tab, click **Export JSON** next to that
-   month — it downloads a file like `2026-08.json`.
-6. In your GitHub repo, add that file to `data/months/`.
-7. Open `data/manifest.json` and add the new month key to the `months` list, e.g.:
-   ```json
-   { "months": ["2026-07", "2026-08"] }
-   ```
-   (Tip: the **Export manifest.json** button on the same tab regenerates this
-   file automatically from everything currently loaded, so you can just
-   download and replace it instead of hand-editing.)
-8. Commit and push both files. GitHub Pages updates within a minute or two.
+If a file's month can't be worked out from its filename, it's silently
+skipped (check the browser console for a warning) — just make sure a month
+name/abbreviation and a 4-digit year both appear in the filename.
 
-From then on, everyone who opens the dashboard sees every published month —
-no re-uploading needed on their end.
+You can still use the **Data & Upload** tab (admin-only) to preview a file
+locally in your own browser before publishing it, and it has an **Export
+JSON** button as an optional backup/debugging format — but for normal
+monthly publishing you don't need either.
 
 ## 4. Expected Excel format
 
@@ -120,8 +113,14 @@ written for anyone viewing the live site.
 
 ## Notes
 
-- All parsing and storage happens client-side (SheetJS for reading `.xlsx`,
-  `localStorage` for keeping your uploads between visits). Nothing is
-  uploaded to any server other than GitHub Pages hosting the static files.
+- All parsing happens client-side (SheetJS for reading `.xlsx`). The list of
+  files in `data/` is fetched from the public GitHub API
+  (`api.github.com/repos/<owner>/<repo>/contents/data`), and each file is then
+  downloaded and parsed in the browser. Nothing is uploaded to any server
+  other than GitHub itself.
+- This auto-discovery only works once the site is actually live at a
+  `*.github.io` address (it reads the current hostname to figure out which
+  repo to query) — opening `index.html` locally via `file://` will show 0
+  GitHub-published months, which is expected.
 - With only one month loaded, Month/Quarter/Year will show identical numbers
   — that's expected, and resolves itself as more months are published.
