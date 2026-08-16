@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chittoor Police — Crime Against Women Public Feedback Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{
+  --bg:#e8edf6; --bg2:#eef2f9;
+  --panel:#ffffff; --panel2:#f5f7fc;
+  --line:#e4e9f1; --line2:#d3dbe8;
+  --ink:#16223d; --muted:#566378; --faint:#93a1b8;
+  --accent:#2c3fae; --accent2:#3f9fe6;
+  --gold:#e3b53d; --gold-soft:#f6d889;
+  --up:#16a36a; --up-soft:#e6f7ee;
+  --down:#ec4848; --down-soft:#fbe3e3;
+  --mid:#f0a91e; --mid-soft:#fdf3da;
+  --shadow:0 14px 38px -20px rgba(27,42,107,.32);
+  --shadow-sm:0 3px 12px -5px rgba(27,42,107,.22);
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Public Sans',system-ui,sans-serif;
+  background:
+    radial-gradient(900px 480px at 92% -6%, rgba(63,81,212,.10), transparent 60%),
+    radial-gradient(720px 420px at -6% 6%, rgba(63,159,230,.10), transparent 55%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  background-attachment:fixed;
+  color:var(--ink); min-height:100vh; font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Archivo',sans-serif;letter-spacing:-.02em;line-height:1.15}
+.wrap{max-width:1300px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+button{font-family:inherit}
+
+/* ===== HEADER ===== */
+header.top{position:relative;padding-bottom:4px}
+.hbar{height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--gold),var(--gold-soft),var(--gold))}
+.hmain{
+  position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin:18px 0 0;padding:20px 24px;border-radius:var(--radius);
+  background:linear-gradient(115deg,#16235c 0%,#243a9e 54%,#3447c7 100%);
+  box-shadow:0 22px 46px -20px rgba(27,42,107,.6);
+}
+.hmain::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(560px 200px at 82% -45%,rgba(255,255,255,.18),transparent 60%),
+             repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px)}
+.crest{width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--gold-soft);box-shadow:0 6px 16px rgba(0,0,0,.45);background:#0f1a45;font-size:24px}
+.htext{position:relative;flex:1;min-width:260px}
+.kicker{color:var(--gold-soft);font-weight:700;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+.hmain h1{color:#fff;font-size:23px;font-weight:800}
+.hmain h1 b{font-weight:900;color:var(--gold-soft)}
+.subline{color:#c9d3f5;font-size:12.5px;margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.subline .sep{opacity:.5}
+.hstats{position:relative;display:flex;gap:20px;flex:none}
+.stat{text-align:center}
+.stat .v{color:#fff;font-family:'Archivo',sans-serif;font-weight:800;font-size:21px}
+.stat .l{color:#aeb9e6;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:1px}
+
+.srcbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 4px 0;font-size:12.5px;color:var(--muted)}
+.srcdot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.srcdot.ok{background:var(--up)}
+.srcdot.warn{background:var(--mid)}
+.srcbar .grow{flex:1}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line2);background:#fff;color:var(--ink);padding:7px 13px;border-radius:9px;
+  font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm);transition:.15s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#233595}
+.btn.gold{background:var(--gold);color:#3a2c00;border-color:var(--gold)}
+
+/* ===== TABS ===== */
+nav.tabs{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg2) 70%,transparent);padding-top:10px;margin-top:4px}
+.tabrow{display:flex;gap:4px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin}
+.tabbtn{flex:none;border:1px solid transparent;background:transparent;color:var(--muted);
+  padding:9px 15px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.tabbtn:hover{color:var(--accent);background:#fff}
+.tabbtn.active{color:#fff;background:var(--accent);box-shadow:var(--shadow-sm)}
+
+main{padding-bottom:60px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ===== CARDS ===== */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:18px;overflow:hidden}
+.ch{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.ch h3{font-size:15px}
+.cb{padding:16px 18px}
+.grid{display:grid;gap:16px}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+.grid.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:900px){.grid.g3,.grid.g2{grid-template-columns:1fr}}
+
+/* score cards */
+.scorecard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:18px 20px}
+.scorecard .sctop{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.scorecard h4{font-size:15.5px;font-weight:800}
+.scdate{font-size:11px;color:var(--faint);font-weight:600}
+.scrow{display:flex;gap:22px;margin-top:14px}
+.scitem{display:flex;align-items:center;gap:10px}
+.scicon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.scicon.pos{background:var(--up-soft);color:var(--up)}
+.scicon.neg{background:var(--down-soft);color:var(--down)}
+.scval{font-family:'Archivo',sans-serif;font-weight:800;font-size:22px;line-height:1}
+.sclabel{font-size:10.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.scfoot{margin-top:12px;font-size:11px;color:var(--faint)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--panel2);color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-weight:700;font-size:12px}
+.rank{font-weight:800;color:var(--muted);width:34px}
+.qtxt{color:var(--muted);font-size:11.5px;line-height:1.4;max-width:340px}
+.center{text-align:center}
+.right{text-align:right}
+.small{font-size:11.5px;color:var(--faint)}
+.chart-box{position:relative}
+.linkbtn{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:700;font-size:12.5px;padding:0}
+
+/* upload zone */
+.dropzone{border:2px dashed var(--line2);border-radius:14px;padding:34px 20px;text-align:center;background:var(--panel2);cursor:pointer;transition:.15s}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:#eef1fd}
+.dropzone .dzicon{font-size:30px;margin-bottom:8px}
+.dropzone .dzlabel{font-weight:700;color:var(--ink);font-size:14px}
+.dropzone .dzsub{color:var(--muted);font-size:12px;margin-top:4px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.badge.local{background:#eef1fd;color:var(--accent)}
+.badge.gh{background:#e6f7ee;color:var(--up)}
+.badge.seed{background:#fdf3da;color:#8a6512}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#16223d;color:#fff;
+  padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 12px 30px rgba(0,0,0,.3);
+  opacity:0;pointer-events:none;transition:.25s;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,20,40,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.modal h3{margin-bottom:6px}
+.modal p{color:var(--muted);font-size:13px;margin-bottom:14px}
+.modal input, .modal select{width:100%;padding:9px 11px;border:1px solid var(--line2);border-radius:9px;font-size:13.5px;margin-bottom:12px}
+.modal .mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+
+.emptynote{padding:40px 20px;text-align:center;color:var(--muted)}
+.emptynote .big{font-size:30px;margin-bottom:10px}
+
+footer{padding:28px 0 40px;text-align:center;color:var(--faint);font-size:12px}
+
+@media(max-width:760px){
+  .wrap{padding:0 12px}
+  .hmain{padding:16px}
+  .hstats{gap:12px}
+  .scrow{gap:14px;flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="hmain">
+    <div class="crest">👮</div>
+    <div class="htext">
+      <div class="kicker" id="kicker">Andhra Pradesh Police · Chittoor District</div>
+      <h1 id="h-title">Public Feedback on <b>Crime Against Women</b> — PS Dashboard</h1>
+      <div class="subline" id="h-sub">
+        <span id="h-asof">Report as on: —</span>
+        <span class="sep">•</span><span id="h-survey">PS Wise Public Feedback Survey</span>
+      </div>
+    </div>
+    <div class="hstats">
+      <div class="stat"><div class="v" id="s-ps">—</div><div class="l">Police Stations</div></div>
+      <div class="stat"><div class="v" id="s-q">—</div><div class="l">Feedback Questions</div></div>
+      <div class="stat"><div class="v" id="s-mo">—</div><div class="l">Months Loaded</div></div>
+    </div>
+  </div>
+  <div class="hbar"></div>
+</header>
+
+<div class="srcbar">
+  <span class="srcdot" id="srcdot"></span>
+  <span id="srctext">Loading data…</span>
+  <span class="grow"></span>
+  <div class="btnrow">
+    <button class="btn" id="btnRefresh" title="Reload data from GitHub-hosted files and local uploads">🔄 Refresh</button>
+    <button class="btn primary" id="btnGoUpload">🔒 Admin Login</button>
+    <button class="btn" id="btnAdminLogout" style="display:none" title="Log out of admin mode">🚪 Logout</button>
+  </div>
+</div>
+</div>
+
+<nav class="tabs"><div class="wrap"><div class="tabrow" id="tabrow"></div></div></nav>
+
+<main class="wrap">
+  <section class="panel active" id="p-overview"></section>
+  <section class="panel" id="p-rankings"></section>
+  <section class="panel" id="p-heatmap"></section>
+  <section class="panel" id="p-detail"></section>
+  <section class="panel" id="p-data"></section>
+  <section class="panel" id="p-method"></section>
+</main>
+
+<footer class="wrap" id="footer">Chittoor District Police — Crime Against Women Public Feedback Dashboard</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="monthModalBg">
+  <div class="modal">
+    <h3 id="mmTitle">Confirm report month</h3>
+    <p id="mmSub">Tell us which month this report covers.</p>
+    <select id="mmMonth"></select>
+    <div class="mrow">
+      <button class="btn" id="mmCancel">Cancel</button>
+      <button class="btn primary" id="mmSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script id="seed-data" type="application/json">{
+ "month": "2026-07",
+ "reportLabel": "July 2026",
+ "reportAsOn": "31.07.2026",
+ "sourceFile": "District_Mandal_Location_Wise_Analysis_Report__july.xlsx",
+ "surveyTitle": "PS WISE PUBLIC FEEDBACK ON CRIME AGAINST WOMEN",
+ "questions": [
+  "మీ ప్రాంతంలో మహిళా రక్షణ అవగాహనా కార్యక్రమాలు జరుగుతున్నాయా?",
+  "మీ ప్రాంతంలో బహిరంగ ప్రదేశాలలో మహిళలపై వేధింపులు / నేరాలు జరుగుతున్నాయా ?",
+  "మీ ప్రాంతంలో మహిళలపై జరుగుతున్న నేరాలపై పోలీసులు సక్రమంగా స్పందిస్తున్నారా ?"
+ ],
+ "questionsShort": [
+  "Women Safety Awareness Programs",
+  "Harassment/Crimes in Public Places",
+  "Police Response to Crimes Against Women"
+ ],
+ "rows": [
+  {
+   "mandal": "Baireddi Palle",
+   "location": "CHITTOOR,BAIREDDI PALLE PS",
+   "total": 76.0,
+   "q": [
+    {
+     "pos": 60.0,
+     "neg": 40.0
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    },
+    {
+     "pos": 53.33,
+     "neg": 46.67
+    }
+   ]
+  },
+  {
+   "mandal": "Bangarupalem",
+   "location": "CHITTOOR,BANGARUPALEM UPS",
+   "total": 116.0,
+   "q": [
+    {
+     "pos": 47.27,
+     "neg": 52.73
+    },
+    {
+     "pos": 85.71,
+     "neg": 14.29
+    },
+    {
+     "pos": 42.31,
+     "neg": 57.69
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR 1 TOWN",
+   "total": 82.0,
+   "q": [
+    {
+     "pos": 52.0,
+     "neg": 48.0
+    },
+    {
+     "pos": 74.07,
+     "neg": 25.93
+    },
+    {
+     "pos": 56.67,
+     "neg": 43.33
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR 2 TOWN PS",
+   "total": 119.0,
+   "q": [
+    {
+     "pos": 40.82,
+     "neg": 59.18
+    },
+    {
+     "pos": 78.79,
+     "neg": 21.21
+    },
+    {
+     "pos": 54.05,
+     "neg": 45.95
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR TALUK PS",
+   "total": 47.0,
+   "q": [
+    {
+     "pos": 40.0,
+     "neg": 60.0
+    },
+    {
+     "pos": 81.66,
+     "neg": 18.34
+    },
+    {
+     "pos": 57.14,
+     "neg": 42.86
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,NARSINGHARAYANIPET PS",
+   "total": 11.0,
+   "q": [
+    {
+     "pos": 33.33,
+     "neg": 66.67
+    },
+    {
+     "pos": 75.0,
+     "neg": 25.0
+    },
+    {
+     "pos": 75.0,
+     "neg": 25.0
+    }
+   ]
+  },
+  {
+   "mandal": "Gangadhara Nellore",
+   "location": "CHITTOOR,GANGADHARA NELLORE UPS",
+   "total": 97.0,
+   "q": [
+    {
+     "pos": 51.61,
+     "neg": 48.39
+    },
+    {
+     "pos": 69.77,
+     "neg": 30.23
+    },
+    {
+     "pos": 56.52,
+     "neg": 43.48
+    }
+   ]
+  },
+  {
+   "mandal": "Gangavaram",
+   "location": "CHITTOOR,GANGAVARAM UPS",
+   "total": 85.0,
+   "q": [
+    {
+     "pos": 46.67,
+     "neg": 53.33
+    },
+    {
+     "pos": 80.77,
+     "neg": 19.23
+    },
+    {
+     "pos": 55.17,
+     "neg": 44.83
+    }
+   ]
+  },
+  {
+   "mandal": "Gudi Palle",
+   "location": "CHITTOOR,GUDUPALLE (M) (CHIGURUGUNTA)",
+   "total": 63.0,
+   "q": [
+    {
+     "pos": 43.75,
+     "neg": 56.25
+    },
+    {
+     "pos": 59.26,
+     "neg": 40.74
+    },
+    {
+     "pos": 65.0,
+     "neg": 35.0
+    }
+   ]
+  },
+  {
+   "mandal": "Gudipala",
+   "location": "CHITTOOR,GUDIPALA PS",
+   "total": 79.0,
+   "q": [
+    {
+     "pos": 25.0,
+     "neg": 75.0
+    },
+    {
+     "pos": 92.86,
+     "neg": 7.14
+    },
+    {
+     "pos": 89.58,
+     "neg": 10.42
+    }
+   ]
+  },
+  {
+   "mandal": "Irala",
+   "location": "CHITTOOR,IRALA PS",
+   "total": 56.0,
+   "q": [
+    {
+     "pos": 58.33,
+     "neg": 41.67
+    },
+    {
+     "pos": 75.0,
+     "neg": 25.0
+    },
+    {
+     "pos": 65.0,
+     "neg": 35.0
+    }
+   ]
+  },
+  {
+   "mandal": "Irala",
+   "location": "CHITTOOR,KANIPAKAM PS",
+   "total": 22.0,
+   "q": [
+    {
+     "pos": 50.0,
+     "neg": 50.0
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    },
+    {
+     "pos": 54.55,
+     "neg": 45.45
+    }
+   ]
+  },
+  {
+   "mandal": "Karvetinagar",
+   "location": "CHITTOOR,KARVETINAGAR PS",
+   "total": 65.0,
+   "q": [
+    {
+     "pos": 35.48,
+     "neg": 64.52
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    },
+    {
+     "pos": 36.84,
+     "neg": 63.16
+    }
+   ]
+  },
+  {
+   "mandal": "Kuppam",
+   "location": "CHITTOOR,KUPPAM UPS",
+   "total": 132.0,
+   "q": [
+    {
+     "pos": 56.56,
+     "neg": 43.44
+    },
+    {
+     "pos": 68.42,
+     "neg": 31.58
+    },
+    {
+     "pos": 59.41,
+     "neg": 40.59
+    }
+   ]
+  },
+  {
+   "mandal": "Nagari",
+   "location": "CHITTOOR,NAGARI UPS",
+   "total": 148.0,
+   "q": [
+    {
+     "pos": 48.34,
+     "neg": 51.67
+    },
+    {
+     "pos": 75.73,
+     "neg": 24.27
+    },
+    {
+     "pos": 56.82,
+     "neg": 43.18
+    }
+   ]
+  },
+  {
+   "mandal": "Nindra",
+   "location": "CHITTOOR,NINDRA PS",
+   "total": 46.0,
+   "q": [
+    {
+     "pos": 21.43,
+     "neg": 78.57
+    },
+    {
+     "pos": 73.68,
+     "neg": 26.32
+    },
+    {
+     "pos": 69.23,
+     "neg": 30.77
+    }
+   ]
+  },
+  {
+   "mandal": "Palamaner",
+   "location": "CHITTOOR,PALAMANER UPS",
+   "total": 112.0,
+   "q": [
+    {
+     "pos": 43.42,
+     "neg": 56.58
+    },
+    {
+     "pos": 69.93,
+     "neg": 30.07
+    },
+    {
+     "pos": 60.61,
+     "neg": 39.38
+    }
+   ]
+  },
+  {
+   "mandal": "Palasamudram",
+   "location": "CHITTOOR,PALASAMUDRAM PS",
+   "total": 37.0,
+   "q": [
+    {
+     "pos": 75.0,
+     "neg": 25.0
+    },
+    {
+     "pos": 72.73,
+     "neg": 27.27
+    },
+    {
+     "pos": 50.0,
+     "neg": 50.0
+    }
+   ]
+  },
+  {
+   "mandal": "Pedda Panjani",
+   "location": "CHITTOOR, PANJANI PS",
+   "total": 96.0,
+   "q": [
+    {
+     "pos": 48.28,
+     "neg": 51.72
+    },
+    {
+     "pos": 77.14,
+     "neg": 22.86
+    },
+    {
+     "pos": 56.25,
+     "neg": 43.75
+    }
+   ]
+  },
+  {
+   "mandal": "Penumuru",
+   "location": "CHITTOOR,PENUMURU PS",
+   "total": 60.0,
+   "q": [
+    {
+     "pos": 56.52,
+     "neg": 43.48
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    },
+    {
+     "pos": 52.63,
+     "neg": 47.37
+    }
+   ]
+  },
+  {
+   "mandal": "Pulicherla",
+   "location": "CHITTOOR,KALLUR PS",
+   "total": 71.0,
+   "q": [
+    {
+     "pos": 48.15,
+     "neg": 51.85
+    },
+    {
+     "pos": 92.86,
+     "neg": 7.14
+    },
+    {
+     "pos": 53.33,
+     "neg": 46.67
+    }
+   ]
+  },
+  {
+   "mandal": "Puthalapattu",
+   "location": "CHITTOOR,PUTHALAPATTU UPS",
+   "total": 81.0,
+   "q": [
+    {
+     "pos": 73.91,
+     "neg": 26.09
+    },
+    {
+     "pos": 90.38,
+     "neg": 9.62
+    },
+    {
+     "pos": 83.34,
+     "neg": 16.66
+    }
+   ]
+  },
+  {
+   "mandal": "Rama Kuppam",
+   "location": "CHITTOOR,RAMA KUPPAM PS",
+   "total": 72.0,
+   "q": [
+    {
+     "pos": 50.0,
+     "neg": 50.0
+    },
+    {
+     "pos": 73.91,
+     "neg": 26.09
+    },
+    {
+     "pos": 70.37,
+     "neg": 29.63
+    }
+   ]
+  },
+  {
+   "mandal": "Rompicherla",
+   "location": "CHITTOOR,ROMPICHERLA PS",
+   "total": 38.0,
+   "q": [
+    {
+     "pos": 36.36,
+     "neg": 63.64
+    },
+    {
+     "pos": 41.18,
+     "neg": 58.82
+    },
+    {
+     "pos": 60.0,
+     "neg": 40.0
+    }
+   ]
+  },
+  {
+   "mandal": "Santhi Puram",
+   "location": "CHITTOOR,RALLABUDUGUR PS",
+   "total": 70.0,
+   "q": [
+    {
+     "pos": 42.86,
+     "neg": 57.14
+    },
+    {
+     "pos": 63.33,
+     "neg": 36.67
+    },
+    {
+     "pos": 52.63,
+     "neg": 47.37
+    }
+   ]
+  },
+  {
+   "mandal": "Srirangarajapuram",
+   "location": "CHITTOOR,S.R. PURAM PS",
+   "total": 48.0,
+   "q": [
+    {
+     "pos": 27.78,
+     "neg": 72.22
+    },
+    {
+     "pos": 71.43,
+     "neg": 28.57
+    },
+    {
+     "pos": 62.5,
+     "neg": 37.5
+    }
+   ]
+  },
+  {
+   "mandal": "Thavanampalle",
+   "location": "CHITTOOR,THAVANAMPALLE PS",
+   "total": 80.0,
+   "q": [
+    {
+     "pos": 34.38,
+     "neg": 65.63
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    }
+   ]
+  },
+  {
+   "mandal": "Veduru Kuppam",
+   "location": "CHITTOOR,VEDURU KUPPAM PS",
+   "total": 52.0,
+   "q": [
+    {
+     "pos": 30.0,
+     "neg": 70.0
+    },
+    {
+     "pos": 76.19,
+     "neg": 23.81
+    },
+    {
+     "pos": 63.64,
+     "neg": 36.36
+    }
+   ]
+  },
+  {
+   "mandal": "Venkatagiri Kota",
+   "location": "CHITTOOR,VENKATAGIRI KOTA UPS",
+   "total": 134.0,
+   "q": [
+    {
+     "pos": 43.75,
+     "neg": 56.25
+    },
+    {
+     "pos": 74.0,
+     "neg": 26.0
+    },
+    {
+     "pos": 63.89,
+     "neg": 36.11
+    }
+   ]
+  },
+  {
+   "mandal": "Vijaya Puram",
+   "location": "CHITTOOR,VIJAYA PURAM PS",
+   "total": 48.0,
+   "q": [
+    {
+     "pos": 55.56,
+     "neg": 44.44
+    },
+    {
+     "pos": 64.71,
+     "neg": 35.29
+    },
+    {
+     "pos": 61.54,
+     "neg": 38.46
+    }
+   ]
+  },
+  {
+   "mandal": "Yadamari",
+   "location": "CHITTOOR,YADAMARI PS",
+   "total": 86.0,
+   "q": [
+    {
+     "pos": 35.0,
+     "neg": 65.0
+    },
+    {
+     "pos": 43.34,
+     "neg": 56.66
+    },
+    {
+     "pos": 28.57,
+     "neg": 71.43
+    }
+   ]
+  }
+ ]
+}</script>
+
+<script>
+window.SEED_MONTH = JSON.parse(document.getElementById('seed-data').textContent);
+</script>
+<script src="app.js"></script>
+</body>
+</html>
