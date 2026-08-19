@@ -168,72 +168,154 @@ footer{padding:28px 0 40px;text-align:center;color:var(--faint);font-size:12px}
   .hstats{gap:12px}
   .scrow{gap:14px;flex-wrap:wrap}
 }
+
+
+/* ===== SURVEY SWITCHER ===== */
+.survey-switch-bar{padding:16px 0 0}
+.survey-switch-inner{display:flex;gap:10px;flex-wrap:wrap}
+.surveytab{flex:1;min-width:220px;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 18px;border-radius:14px;border:1px solid var(--line2);background:#fff;color:var(--ink);
+  font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;cursor:pointer;box-shadow:var(--shadow-sm);
+  transition:.15s}
+.surveytab:hover{border-color:var(--accent);color:var(--accent)}
+.surveytab.active{color:#fff;background:linear-gradient(115deg,#16235c 0%,#243a9e 54%,#3447c7 100%);
+  border-color:transparent;box-shadow:0 14px 30px -14px rgba(27,42,107,.55)}
+.surveytab .stag{font-size:10px;text-transform:uppercase;letter-spacing:.1em;opacity:.75;font-weight:700}
 </style>
 </head>
 <body>
 
+<div class="wrap survey-switch-bar">
+  <div class="survey-switch-inner">
+    <button class="surveytab active" id="surveyBtn-caw" data-survey="caw">👮 PPP SURVEY — CAW</button>
+    <button class="surveytab" id="surveyBtn-gj" data-survey="gj">🌿 PPP SURVEY — GANJA</button>
+  </div>
+</div>
+
+<div class="dash-instance" id="dash-caw" data-survey-root="caw">
 <div class="wrap">
 <header class="top">
   <div class="hmain">
     <div class="crest">👮</div>
     <div class="htext">
-      <div class="kicker" id="kicker">Andhra Pradesh Police · Chittoor District</div>
-      <h1 id="h-title">Public Feedback on <b>Crime Against Women</b> — PS Dashboard</h1>
-      <div class="subline" id="h-sub">
-        <span id="h-asof">Report as on: —</span>
-        <span class="sep">•</span><span id="h-survey">PS Wise Public Feedback Survey</span>
+      <div class="kicker" id="caw-kicker">Andhra Pradesh Police · Chittoor District</div>
+      <h1 id="caw-h-title">Public Feedback on <b>Crime Against Women</b> — PS Dashboard</h1>
+      <div class="subline" id="caw-h-sub">
+        <span id="caw-h-asof">Report as on: —</span>
+        <span class="sep">•</span><span id="caw-h-survey">PS Wise Public Feedback Survey</span>
       </div>
     </div>
     <div class="hstats">
-      <div class="stat"><div class="v" id="s-ps">—</div><div class="l">Police Stations</div></div>
-      <div class="stat"><div class="v" id="s-q">—</div><div class="l">Feedback Questions</div></div>
-      <div class="stat"><div class="v" id="s-mo">—</div><div class="l">Months Loaded</div></div>
+      <div class="stat"><div class="v" id="caw-s-ps">—</div><div class="l">Police Stations</div></div>
+      <div class="stat"><div class="v" id="caw-s-q">—</div><div class="l">Feedback Questions</div></div>
+      <div class="stat"><div class="v" id="caw-s-mo">—</div><div class="l">Months Loaded</div></div>
     </div>
   </div>
   <div class="hbar"></div>
 </header>
 
 <div class="srcbar">
-  <span class="srcdot" id="srcdot"></span>
-  <span id="srctext">Loading data…</span>
+  <span class="srcdot" id="caw-srcdot"></span>
+  <span id="caw-srctext">Loading data…</span>
   <span class="grow"></span>
   <div class="btnrow">
-    <button class="btn" id="btnRefresh" title="Reload data from GitHub-hosted files and local uploads">🔄 Refresh</button>
-    <button class="btn primary" id="btnGoUpload">🔒 Admin Login</button>
-    <button class="btn" id="btnAdminLogout" style="display:none" title="Log out of admin mode">🚪 Logout</button>
+    <button class="btn" id="caw-btnRefresh" title="Reload data from GitHub-hosted files and local uploads">🔄 Refresh</button>
+    <button class="btn primary" id="caw-btnGoUpload">🔒 Admin Login</button>
+    <button class="btn" id="caw-btnAdminLogout" style="display:none" title="Log out of admin mode">🚪 Logout</button>
   </div>
 </div>
 </div>
 
-<nav class="tabs"><div class="wrap"><div class="tabrow" id="tabrow"></div></div></nav>
+<nav class="tabs"><div class="wrap"><div class="tabrow" id="caw-tabrow"></div></div></nav>
 
 <main class="wrap">
-  <section class="panel active" id="p-overview"></section>
-  <section class="panel" id="p-rankings"></section>
-  <section class="panel" id="p-heatmap"></section>
-  <section class="panel" id="p-detail"></section>
-  <section class="panel" id="p-data"></section>
-  <section class="panel" id="p-method"></section>
+  <section class="panel active" id="caw-p-overview"></section>
+  <section class="panel" id="caw-p-rankings"></section>
+  <section class="panel" id="caw-p-heatmap"></section>
+  <section class="panel" id="caw-p-detail"></section>
+  <section class="panel" id="caw-p-data"></section>
+  <section class="panel" id="caw-p-method"></section>
 </main>
 
-<footer class="wrap" id="footer">Chittoor District Police — Crime Against Women Public Feedback Dashboard</footer>
-</div>
+<footer class="wrap" id="caw-footer">Chittoor District Police — Crime Against Women Public Feedback Dashboard</footer>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="caw-toast"></div>
 
-<div class="modal-bg" id="monthModalBg">
+<div class="modal-bg" id="caw-monthModalBg">
   <div class="modal">
-    <h3 id="mmTitle">Confirm report month</h3>
-    <p id="mmSub">Tell us which month this report covers.</p>
-    <select id="mmMonth"></select>
+    <h3 id="caw-mmTitle">Confirm report month</h3>
+    <p id="caw-mmSub">Tell us which month this report covers.</p>
+    <select id="caw-mmMonth"></select>
     <div class="mrow">
-      <button class="btn" id="mmCancel">Cancel</button>
-      <button class="btn primary" id="mmSave">Save</button>
+      <button class="btn" id="caw-mmCancel">Cancel</button>
+      <button class="btn primary" id="caw-mmSave">Save</button>
     </div>
   </div>
 </div>
+</div>
+<div class="dash-instance" id="dash-gj" data-survey-root="gj" style="display:none">
+<div class="wrap">
+<header class="top">
+  <div class="hmain">
+    <div class="crest">🌿</div>
+    <div class="htext">
+      <div class="kicker" id="gj-kicker">Andhra Pradesh Police · Chittoor District</div>
+      <h1 id="gj-h-title">Public Feedback on <b>Ganja (Narcotics)</b> — PS Dashboard</h1>
+      <div class="subline" id="gj-h-sub">
+        <span id="gj-h-asof">Report as on: —</span>
+        <span class="sep">•</span><span id="gj-h-survey">PS Wise Public Feedback Survey</span>
+      </div>
+    </div>
+    <div class="hstats">
+      <div class="stat"><div class="v" id="gj-s-ps">—</div><div class="l">Police Stations</div></div>
+      <div class="stat"><div class="v" id="gj-s-q">—</div><div class="l">Feedback Questions</div></div>
+      <div class="stat"><div class="v" id="gj-s-mo">—</div><div class="l">Months Loaded</div></div>
+    </div>
+  </div>
+  <div class="hbar"></div>
+</header>
 
-<script id="seed-data" type="application/json">{
+<div class="srcbar">
+  <span class="srcdot" id="gj-srcdot"></span>
+  <span id="gj-srctext">Loading data…</span>
+  <span class="grow"></span>
+  <div class="btnrow">
+    <button class="btn" id="gj-btnRefresh" title="Reload data from GitHub-hosted files and local uploads">🔄 Refresh</button>
+    <button class="btn primary" id="gj-btnGoUpload">🔒 Admin Login</button>
+    <button class="btn" id="gj-btnAdminLogout" style="display:none" title="Log out of admin mode">🚪 Logout</button>
+  </div>
+</div>
+</div>
+
+<nav class="tabs"><div class="wrap"><div class="tabrow" id="gj-tabrow"></div></div></nav>
+
+<main class="wrap">
+  <section class="panel active" id="gj-p-overview"></section>
+  <section class="panel" id="gj-p-rankings"></section>
+  <section class="panel" id="gj-p-heatmap"></section>
+  <section class="panel" id="gj-p-detail"></section>
+  <section class="panel" id="gj-p-data"></section>
+  <section class="panel" id="gj-p-method"></section>
+</main>
+
+<footer class="wrap" id="gj-footer">Chittoor District Police — Ganja (Narcotics) Public Feedback Dashboard</footer>
+
+<div class="toast" id="gj-toast"></div>
+
+<div class="modal-bg" id="gj-monthModalBg">
+  <div class="modal">
+    <h3 id="gj-mmTitle">Confirm report month</h3>
+    <p id="gj-mmSub">Tell us which month this report covers.</p>
+    <select id="gj-mmMonth"></select>
+    <div class="mrow">
+      <button class="btn" id="gj-mmCancel">Cancel</button>
+      <button class="btn primary" id="gj-mmSave">Save</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script id="seed-data-caw" type="application/json">{
  "month": "2026-07",
  "reportLabel": "July 2026",
  "reportAsOn": "31.07.2026",
@@ -841,9 +923,618 @@ footer{padding:28px 0 40px;text-align:center;color:var(--faint);font-size:12px}
   }
  ]
 }</script>
+<script id="seed-data-gj" type="application/json">{
+ "month": "2026-07",
+ "reportLabel": "July 2026",
+ "reportAsOn": "31.07.2026",
+ "sourceFile": "PPP_Ganja_July2026.xlsx",
+ "surveyTitle": "PS WISE PUBLIC FEEDBACK ON GANJA (NARCOTICS) MENACE",
+ "questions": [
+  "మీ ప్రాంతంలోని  బహిరంగ ప్రదేశాలలో గంజాయి అమ్మకం మరియు వినియోగం  మీరు గమనించారా?",
+  "మీ ప్రాంతంలో గంజాయి  సమస్య ఉందా?",
+  "మీ ప్రాంతంలో గంజాయి సమస్యపై పోలీసులు సమర్ధవంతంగా స్పందిస్తున్నారా?"
+ ],
+ "questionsShort": [
+  "Ganja Sale/Use Observed in Public Places",
+  "Ganja Problem in the Area",
+  "Police Response to Ganja Problem"
+ ],
+ "rows": [
+  {
+   "mandal": "Baireddi Palle",
+   "location": "CHITTOOR,BAIREDDI PALLE PS",
+   "total": 201.0,
+   "q": [
+    {
+     "pos": 86.49,
+     "neg": 13.51
+    },
+    {
+     "pos": 63.77,
+     "neg": 36.23
+    },
+    {
+     "pos": 51.72,
+     "neg": 48.28
+    }
+   ]
+  },
+  {
+   "mandal": "Bangarupalem",
+   "location": "CHITTOOR,BANGARUPALEM UPS",
+   "total": 291.0,
+   "q": [
+    {
+     "pos": 80.61,
+     "neg": 19.39
+    },
+    {
+     "pos": 81.82,
+     "neg": 18.18
+    },
+    {
+     "pos": 61.7,
+     "neg": 38.3
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR 1 TOWN",
+   "total": 176.0,
+   "q": [
+    {
+     "pos": 75.44,
+     "neg": 24.56
+    },
+    {
+     "pos": 78.13,
+     "neg": 21.88
+    },
+    {
+     "pos": 52.73,
+     "neg": 47.27
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR 2 TOWN PS",
+   "total": 260.0,
+   "q": [
+    {
+     "pos": 69.9,
+     "neg": 30.1
+    },
+    {
+     "pos": 76.71,
+     "neg": 23.29
+    },
+    {
+     "pos": 69.05,
+     "neg": 30.95
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,CHITTOOR TALUK PS",
+   "total": 92.0,
+   "q": [
+    {
+     "pos": 78.41,
+     "neg": 21.59
+    },
+    {
+     "pos": 68.46,
+     "neg": 31.54
+    },
+    {
+     "pos": 50.8,
+     "neg": 49.2
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,GUDIPALA PS",
+   "total": 210.0,
+   "q": [
+    {
+     "pos": 78.43,
+     "neg": 21.57
+    },
+    {
+     "pos": 61.86,
+     "neg": 38.14
+    },
+    {
+     "pos": 58.02,
+     "neg": 41.98
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,NARSINGHARAYANIPET PS",
+   "total": 38.0,
+   "q": [
+    {
+     "pos": 77.78,
+     "neg": 22.22
+    },
+    {
+     "pos": 69.23,
+     "neg": 30.77
+    },
+    {
+     "pos": 68.75,
+     "neg": 31.25
+    }
+   ]
+  },
+  {
+   "mandal": "Puthalapattu",
+   "location": "CHITTOOR,PUTHALAPATTU UPS",
+   "total": 180.0,
+   "q": [
+    {
+     "pos": 90.33,
+     "neg": 9.68
+    },
+    {
+     "pos": 62.97,
+     "neg": 37.03
+    },
+    {
+     "pos": 78.0,
+     "neg": 22.0
+    }
+   ]
+  },
+  {
+   "mandal": "Chittoor",
+   "location": "CHITTOOR,YADAMARI PS",
+   "total": 183.0,
+   "q": [
+    {
+     "pos": 81.66,
+     "neg": 18.34
+    },
+    {
+     "pos": 65.41,
+     "neg": 34.59
+    },
+    {
+     "pos": 66.19,
+     "neg": 33.81
+    }
+   ]
+  },
+  {
+   "mandal": "Gangadhara Nellore",
+   "location": "CHITTOOR,GANGADHARA NELLORE UPS",
+   "total": 237.0,
+   "q": [
+    {
+     "pos": 65.85,
+     "neg": 34.15
+    },
+    {
+     "pos": 68.75,
+     "neg": 31.25
+    },
+    {
+     "pos": 61.33,
+     "neg": 38.67
+    }
+   ]
+  },
+  {
+   "mandal": "Gangavaram",
+   "location": "CHITTOOR,GANGAVARAM UPS",
+   "total": 190.0,
+   "q": [
+    {
+     "pos": 80.0,
+     "neg": 20.0
+    },
+    {
+     "pos": 69.12,
+     "neg": 30.88
+    },
+    {
+     "pos": 59.65,
+     "neg": 40.35
+    }
+   ]
+  },
+  {
+   "mandal": "Gudi Palle",
+   "location": "CHITTOOR,GUDUPALLE (M) (CHIGURUGUNTA)",
+   "total": 108.0,
+   "q": [
+    {
+     "pos": 78.95,
+     "neg": 21.05
+    },
+    {
+     "pos": 68.09,
+     "neg": 31.91
+    },
+    {
+     "pos": 60.87,
+     "neg": 39.13
+    }
+   ]
+  },
+  {
+   "mandal": "Irala",
+   "location": "CHITTOOR,IRALA PS",
+   "total": 156.0,
+   "q": [
+    {
+     "pos": 83.93,
+     "neg": 16.07
+    },
+    {
+     "pos": 69.05,
+     "neg": 30.95
+    },
+    {
+     "pos": 62.07,
+     "neg": 37.93
+    }
+   ]
+  },
+  {
+   "mandal": "Irala",
+   "location": "CHITTOOR,KANIPAKAM PS",
+   "total": 71.0,
+   "q": [
+    {
+     "pos": 81.48,
+     "neg": 18.52
+    },
+    {
+     "pos": 84.21,
+     "neg": 15.79
+    },
+    {
+     "pos": 72.0,
+     "neg": 28.0
+    }
+   ]
+  },
+  {
+   "mandal": "Karvetinagar",
+   "location": "CHITTOOR,KARVETINAGAR PS",
+   "total": 156.0,
+   "q": [
+    {
+     "pos": 76.6,
+     "neg": 23.4
+    },
+    {
+     "pos": 83.05,
+     "neg": 16.95
+    },
+    {
+     "pos": 72.0,
+     "neg": 28.0
+    }
+   ]
+  },
+  {
+   "mandal": "Kuppam",
+   "location": "CHITTOOR,KUPPAM UPS",
+   "total": 251.0,
+   "q": [
+    {
+     "pos": 73.12,
+     "neg": 26.88
+    },
+    {
+     "pos": 68.98,
+     "neg": 31.02
+    },
+    {
+     "pos": 66.67,
+     "neg": 33.33
+    }
+   ]
+  },
+  {
+   "mandal": "Nagari",
+   "location": "CHITTOOR,NAGARI UPS",
+   "total": 258.0,
+   "q": [
+    {
+     "pos": 66.11,
+     "neg": 33.89
+    },
+    {
+     "pos": 64.03,
+     "neg": 35.98
+    },
+    {
+     "pos": 46.6,
+     "neg": 53.4
+    }
+   ]
+  },
+  {
+   "mandal": "Nindra",
+   "location": "CHITTOOR,NINDRA PS",
+   "total": 97.0,
+   "q": [
+    {
+     "pos": 88.57,
+     "neg": 11.43
+    },
+    {
+     "pos": 60.0,
+     "neg": 40.0
+    },
+    {
+     "pos": 48.15,
+     "neg": 51.85
+    }
+   ]
+  },
+  {
+   "mandal": "Palamaner",
+   "location": "CHITTOOR,PALAMANER UPS",
+   "total": 236.0,
+   "q": [
+    {
+     "pos": 82.69,
+     "neg": 17.31
+    },
+    {
+     "pos": 60.8,
+     "neg": 39.2
+    },
+    {
+     "pos": 56.49,
+     "neg": 43.51
+    }
+   ]
+  },
+  {
+   "mandal": "Palasamudram",
+   "location": "CHITTOOR,PALASAMUDRAM PS",
+   "total": 81.0,
+   "q": [
+    {
+     "pos": 67.74,
+     "neg": 32.26
+    },
+    {
+     "pos": 74.07,
+     "neg": 25.93
+    },
+    {
+     "pos": 78.26,
+     "neg": 21.74
+    }
+   ]
+  },
+  {
+   "mandal": "Pedda Panjani",
+   "location": "CHITTOOR, PANJANI PS",
+   "total": 202.0,
+   "q": [
+    {
+     "pos": 84.93,
+     "neg": 15.07
+    },
+    {
+     "pos": 65.57,
+     "neg": 34.43
+    },
+    {
+     "pos": 60.29,
+     "neg": 39.71
+    }
+   ]
+  },
+  {
+   "mandal": "Penumuru",
+   "location": "CHITTOOR,PENUMURU PS",
+   "total": 137.0,
+   "q": [
+    {
+     "pos": 65.0,
+     "neg": 35.0
+    },
+    {
+     "pos": 76.79,
+     "neg": 23.21
+    },
+    {
+     "pos": 60.98,
+     "neg": 39.02
+    }
+   ]
+  },
+  {
+   "mandal": "Pulicherla",
+   "location": "CHITTOOR,KALLUR PS",
+   "total": 173.0,
+   "q": [
+    {
+     "pos": 77.36,
+     "neg": 22.64
+    },
+    {
+     "pos": 79.03,
+     "neg": 20.97
+    },
+    {
+     "pos": 55.17,
+     "neg": 44.83
+    }
+   ]
+  },
+  {
+   "mandal": "Rama Kuppam",
+   "location": "CHITTOOR,RAMA KUPPAM PS",
+   "total": 195.0,
+   "q": [
+    {
+     "pos": 76.67,
+     "neg": 23.33
+    },
+    {
+     "pos": 62.32,
+     "neg": 37.68
+    },
+    {
+     "pos": 54.55,
+     "neg": 45.45
+    }
+   ]
+  },
+  {
+   "mandal": "Rompicherla",
+   "location": "CHITTOOR,ROMPICHERLA PS",
+   "total": 86.0,
+   "q": [
+    {
+     "pos": 86.21,
+     "neg": 13.79
+    },
+    {
+     "pos": 76.67,
+     "neg": 23.33
+    },
+    {
+     "pos": 59.26,
+     "neg": 40.74
+    }
+   ]
+  },
+  {
+   "mandal": "Santhi Puram",
+   "location": "CHITTOOR,RALLABUDUGUR PS",
+   "total": 144.0,
+   "q": [
+    {
+     "pos": 73.33,
+     "neg": 26.67
+    },
+    {
+     "pos": 63.46,
+     "neg": 36.54
+    },
+    {
+     "pos": 44.68,
+     "neg": 55.32
+    }
+   ]
+  },
+  {
+   "mandal": "Srirangarajapuram",
+   "location": "CHITTOOR,S.R. PURAM PS",
+   "total": 129.0,
+   "q": [
+    {
+     "pos": 82.98,
+     "neg": 17.02
+    },
+    {
+     "pos": 73.17,
+     "neg": 26.83
+    },
+    {
+     "pos": 65.85,
+     "neg": 34.15
+    }
+   ]
+  },
+  {
+   "mandal": "Thavanampalle",
+   "location": "CHITTOOR,THAVANAMPALLE PS",
+   "total": 207.0,
+   "q": [
+    {
+     "pos": 74.03,
+     "neg": 25.97
+    },
+    {
+     "pos": 67.21,
+     "neg": 32.79
+    },
+    {
+     "pos": 63.77,
+     "neg": 36.23
+    }
+   ]
+  },
+  {
+   "mandal": "Veduru Kuppam",
+   "location": "CHITTOOR,VEDURU KUPPAM PS",
+   "total": 109.0,
+   "q": [
+    {
+     "pos": 77.78,
+     "neg": 22.22
+    },
+    {
+     "pos": 71.88,
+     "neg": 28.13
+    },
+    {
+     "pos": 62.5,
+     "neg": 37.5
+    }
+   ]
+  },
+  {
+   "mandal": "Venkatagiri Kota",
+   "location": "CHITTOOR,VENKATAGIRI KOTA UPS",
+   "total": 240.0,
+   "q": [
+    {
+     "pos": 83.54,
+     "neg": 16.46
+    },
+    {
+     "pos": 73.4,
+     "neg": 26.6
+    },
+    {
+     "pos": 59.7,
+     "neg": 40.3
+    }
+   ]
+  },
+  {
+   "mandal": "Vijaya Puram",
+   "location": "CHITTOOR,VIJAYA PURAM PS",
+   "total": 114.0,
+   "q": [
+    {
+     "pos": 69.05,
+     "neg": 30.95
+    },
+    {
+     "pos": 82.5,
+     "neg": 17.5
+    },
+    {
+     "pos": 50.0,
+     "neg": 50.0
+    }
+   ]
+  }
+ ]
+}</script>
 
 <script>
-window.SEED_MONTH = JSON.parse(document.getElementById('seed-data').textContent);
+window.SEED_MONTH_CAW = JSON.parse(document.getElementById('seed-data-caw').textContent);
+window.SEED_MONTH_GJ = JSON.parse(document.getElementById('seed-data-gj').textContent);
 </script>
 <script src="app.js"></script>
 </body>
