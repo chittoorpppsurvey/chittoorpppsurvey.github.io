@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chittoor District Police — PPP Police Station Performance Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+
+<div class="ribbon">
+  <div class="ribbon-inner">
+    <div class="badge-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v6c0 5.2 3.4 9.9 8 11 4.6-1.1 8-5.8 8-11V5l-8-3z" fill="#0d1e36"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="ribbon-title">
+      <div class="ribbon-eyebrow">Chittoor District Police · Public Perception Programme</div>
+      <div class="ribbon-h1">Police Station Performance Monitoring &amp; Comparison Dashboard</div>
+      <div class="ribbon-sub">Crime Against Women (CAW) &amp; Ganja — 12-month Excel-based methodology</div>
+    </div>
+    <div class="datastate" id="datastate"><span class="srcdot ok"></span> <span id="datastate-text">Loading dataset…</span></div>
+  </div>
+  <div class="catswitch" id="catswitch">
+    <button class="catbtn active" data-cat="caw">
+      <span class="catbtn-title">CAW</span>
+      <span class="catbtn-sub">Crime Against Women</span>
+    </button>
+    <button class="catbtn ganja" data-cat="ganja">
+      <span class="catbtn-title">Ganja</span>
+      <span class="catbtn-sub">Narcotics</span>
+    </button>
+  </div>
+  <div class="tabs">
+    <button class="tabbtn active" data-tab="overview">Overview</button>
+    <button class="tabbtn" data-tab="rankings">Rankings</button>
+    <button class="tabbtn" data-tab="trends">Trends</button>
+    <button class="tabbtn" data-tab="compare-periods">Period Comparison</button>
+    <button class="tabbtn" data-tab="compare-ps">Station Comparison</button>
+  </div>
+</div>
+
+<div class="shell">
+  <div id="view-overview" class="view"></div>
+  <div id="view-rankings" class="view" hidden></div>
+  <div id="view-trends" class="view" hidden></div>
+  <div id="view-compare-periods" class="view" hidden></div>
+  <div id="view-compare-ps" class="view" hidden></div>
+
+  <div class="footer-note">Data source: monthly PPP IVRS Location Reports for Crime Against Women and Ganja, Chittoor District Police — 31 unique police stations, 13 months (Jul 2025 – Jul 2026). Figures are district-published positive-perception percentages. CAW and Ganja are tracked and reported fully separately throughout this dashboard.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script>
+  (function(){
+    var caw = Object.keys((window.EMBEDDED_DATA||{}).caw||{}).length;
+    var ganja = Object.keys((window.EMBEDDED_DATA||{}).ganja||{}).length;
+    document.getElementById('datastate-text').textContent = caw+' CAW months · '+ganja+' Ganja months loaded';
+  })();
+</script>
+<script src="app.js"></script>
+</body>
+</html>
